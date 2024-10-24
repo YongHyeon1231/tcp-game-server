@@ -21,3 +21,10 @@ DB,
 npm init -y
 npm install dotenv lodash long mysql2 protobufjs uuid
 npm install -D nodemon prettier
+
+# 중앙 집중식 관리
+
+- 모든 환경 변수와 상수는 한 곳에서 관리, 다른 파일에서 동일한 값을 사용하여도 일관성을 유지
+- 변경이 필요할 때 한 곳에서만 수정하면 됨
+- 환경 변수, 상수의 직접 사용이 아니기때문에 코드가 명확해지는 효과
+- 필요한 경우 개발, 테스트, 프로덕션 환경별로 다른 설정 사용 가능
