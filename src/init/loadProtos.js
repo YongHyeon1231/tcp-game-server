@@ -45,8 +45,8 @@ export const loadProtos = async () => {
 
     // packetNames 에 정의된 패킷들을 등록
     for (const [namespace, types] of Object.entries(packetNames)) {
-      console.log(namespace);
-      console.log(types);
+      //   console.log(namespace);
+      //   console.log(types);
       protoMessages[namespace] = {};
       for (const [type, typeName] of Object.entries(types)) {
         protoMessages[namespace][type] = root.lookupType(typeName);
@@ -60,6 +60,6 @@ export const loadProtos = async () => {
 
 // 로드된 프로토 메시지들의 얕은 복사본을 반환합니다.
 export const getProtoMessages = () => {
-  console.log('protoMessages:', protoMessages);
+  //   console.log('protoMessages:', protoMessages);
   return { ...protoMessages };
 };
