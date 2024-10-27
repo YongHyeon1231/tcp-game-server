@@ -1,0 +1,29 @@
+import { userSessions } from './sessions.js';
+
+export const addUser = (socket, uuid) => {
+  const user = { socket, id: uuid, sequence: 0 };
+  userSessions.push(user);
+  return user;
+};
+
+export const removeUser = (socket) => {
+  const index = userSessions.findIndex((user) => user.socket === socket);
+  if (index !== -1) {
+    // 제거된 사용자 객체를 직접 반환
+    return userSessions.splice(index, 1)[0];
+  }
+};
+
+// sequence를 올려주는 함수가 필요
+export const getNextSequence = (id) => {
+  const user = getUserById(id);
+  if (user) {
+    return ++user.sequence;
+  }
+
+  return null;
+};
+
+export const getUserById = (id) => {
+  return userSessions.find((user) => user.id === id);
+};
