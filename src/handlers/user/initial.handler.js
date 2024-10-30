@@ -17,7 +17,8 @@ const initialHandler = async ({ socket, userId, payload }) => {
     }
 
     // 세션에다가 추가
-    addUser(socket, deviceId);
+    // 유저를 찾을 수 없습니다 에러 해결
+    addUser(socket, user.id);
 
     const initialResponse = createResponse(
       HANDLER_IDS.INITIAL,

@@ -1,7 +1,7 @@
 const MAX_PLAYERS = 2;
 
 class Game {
-  constrictor(id) {
+  constructor(id) {
     this.id = id;
     this.users = [];
     this.state = 'waiting'; // 'waiting', 'inProgress'
@@ -13,7 +13,7 @@ class Game {
     }
     this.users.push(user);
 
-    if (this.user.length === MAX_PLAYERS) {
+    if (this.users.length === MAX_PLAYERS) {
       setTimeout(() => {
         this.startGame();
       }, 3000);

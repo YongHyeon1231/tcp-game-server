@@ -1,4 +1,6 @@
 import { HANDLER_IDS } from '../constants/handlerIds.js';
+import createGameHandler from './game/createGame.handler.js';
+import joinGameHandler from './game/joinGame.handler.js';
 import InitialHandler from './user/initial.handler.js';
 
 // 핸들러를 맵핑하기 위해서
@@ -6,6 +8,14 @@ const handlers = {
   [HANDLER_IDS.INITIAL]: {
     handler: InitialHandler,
     protoType: 'initial.InitialPacket',
+  },
+  [HANDLER_IDS.CREATE_GAME]: {
+    handler: createGameHandler,
+    protoType: 'game.CreateGamePayload',
+  },
+  [HANDLER_IDS.JOIN_GAME]: {
+    handler: joinGameHandler,
+    protoType: 'game.JoinGamePayload',
   },
 };
 
