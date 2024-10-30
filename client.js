@@ -4,10 +4,29 @@ import { getProtoMessages, loadProtos } from './src/init/loadProtos.js';
 const TOTAL_LENGTH = 4; // 전체 길이를 나타내는 4바이트
 const PACKET_TYPE_LENGTH = 1; // 패킷타입을 나타내는 1바이트
 
-const readHeader = (buffer) => {
+let userId;
+let sequence;
+
+const createPacket = (handlerId, payload, clientVersion = '1.0.0', type, name) => {
+  const protoMessages = getProtoMessages();
+  //console.log('protoMessages => ', protoMessages[type]);
+  const PayloadType = protoMessages[type][name];
+  // console.log('PayloadType => ', PayloadType);
+
+  if (!PayloadType) {
+    // <-
+    throw new Error(`PayloadType을 찾을 수 없습니다: type=${type}, name=${name}`);
+  }
+
+  const payloadMessage = PayloadType.create(payload);
+  const payloadBuffer = PayloadType.encode(payloadMessage).finish();
+
   return {
-    length: buffer.readUInt32BE(0),
-    packetType: buffer.writeUInt8(TOTAL_LENGTH),
+    handlerId,
+    userId: '1',
+    clientVersion,
+    sequence: 0,
+    payload: payloadBuffer,
   };
 };
 
@@ -23,26 +42,16 @@ const sendPacket = (socket, packet) => {
 
   // 패킷 길이 정보를 포함한 버퍼 생성
   const packetLength = Buffer.alloc(TOTAL_LENGTH);
-  // 패킷 길이에 타입 바이트 포함
-  packetLength.writeUInt32BE(buffer.length + TOTAL_LENGTH + PACKET_TYPE_LENGTH, 0);
+  packetLength.writeUInt32BE(buffer.length + TOTAL_LENGTH + PACKET_TYPE_LENGTH, 0); // 패킷 길이에 타입 바이트 포함
 
   // 패킷 타입 정보를 포함한 버퍼 생성
   const packetType = Buffer.alloc(PACKET_TYPE_LENGTH);
-  // NORMAL TYPE
-  packetType.writeUInt8(1, 0);
+  packetType.writeUInt8(1, 0); // NORMAL TYPE
 
   // 길이 정보와 메시지를 함께 전송
   const packetWithLength = Buffer.concat([packetLength, packetType, buffer]);
 
   socket.write(packetWithLength);
-};
-
-const writeHeader = (length, packetType) => {
-  const headerSize = TOTAL_LENGTH + PACKET_TYPE_LENGTH;
-  const buffer = Buffer.alloc(headerSize);
-  buffer.writeUInt32BE(length + headerSize, 0);
-  buffer.writeUInt8(packetType, TOTAL_LENGTH);
-  return buffer;
 };
 
 // 서버에 연결할 호스트와 포트
@@ -53,39 +62,40 @@ const client = new net.Socket();
 
 client.connect(PORT, HOST, async () => {
   console.log('Connected to server');
-
-  // const message = 'Hi, There!';
-  // const test = Buffer.from(message);
-
-  // const header = writeHeader(test.length, 11);
-  // const packet = Buffer.concat([header, test]);
-  // client.write(packet);
-
   await loadProtos();
 
-  const message = {
-    handlerId: 2,
-    userId: 'xyz',
-    payload: {},
-    clientVersion: '1.0.0',
-    sequence: 0,
-  };
+  const successPacket = createPacket(0, { deviceId: 'xxxxx' }, '1.0.0', 'initial', 'InitialPacket');
 
-  sendPacket(client, message);
+  sendPacket(client, successPacket);
 });
 
 client.on('data', (data) => {
-  const buffer = Buffer.from(data); // 버퍼 객체의 메서드를 사용하기 위해 변환
+  // 1. 길이 정보 수신 (4바이트)
+  const length = data.readUInt32BE(0);
+  const totalHeaderLength = TOTAL_LENGTH + PACKET_TYPE_LENGTH;
 
-  const { handlerId, length } = readHeader(buffer);
-  console.log(`handlerId: ${handlerId}`);
-  console.log(`length: ${length}`);
+  // 2. 패킷 타입 정보 수신 (1바이트)
+  const packetType = data.readUInt8(4);
+  const packet = data.slice(totalHeaderLength, length); // 패킷 데이터
 
-  const headerSize = TOTAL_LENGTH + PACKET_TYPE_LENGTH;
-  // 메시지 추출
-  const message = buffer.slice(headerSize); // 앞의 헤더 부분을 잘라낸다.
+  if (packetType === 1) {
+    const protoMessages = getProtoMessages();
+    const Response = protoMessages.response.Response;
 
-  console.log(`server 에게 받은 메세지: ${message}`);
+    try {
+      const response = Response.decode(packet);
+
+      if (response.handlerId === 0) {
+        const responseData = JSON.parse(Buffer.from(response.data).toString());
+
+        userId = responseData.userId;
+        console.log('응답 데이터:', responseData);
+      }
+      sequence = response.sequence;
+    } catch (e) {
+      console.log(e);
+    }
+  }
 });
 
 client.on('close', () => {

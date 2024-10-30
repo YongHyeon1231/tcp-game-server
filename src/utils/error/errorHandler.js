@@ -11,7 +11,7 @@ export const handleError = (socket, error) => {
     console.error(`에러 코드: ${error.code}, 메시지: ${error.message}`);
   } else {
     responseCode = ErrorCodes.SOCKET_ERROR;
-    message = eror.message;
+    message = error.message;
     console.error(`일반 에러: ${error.message}`);
   }
 

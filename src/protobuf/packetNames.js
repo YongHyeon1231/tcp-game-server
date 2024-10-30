@@ -3,7 +3,7 @@ export const packetNames = {
     Packet: 'common.Packet',
   },
   initial: {
-    initialPacket: 'initial.InitialPacket',
+    InitialPacket: 'initial.InitialPacket',
   },
   response: {
     Response: 'response.Response',
